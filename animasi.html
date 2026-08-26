@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>I Love You</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at center, #5a0718 0%, #26030b 45%, #100107 100%);
+      color: #ffb3c7;
+      font-family: Georgia, serif;
+    }
+
+    .heart {
+      position: relative;
+      width: min(88vw, 520px);
+      aspect-ratio: 1;
+      height: auto;
+      left: var(--drag-x, 0px);
+      top: var(--drag-y, 0px);
+      transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+      transform-style: preserve-3d;
+      animation: spin-heart 9s linear infinite, pulse 1.8s ease-in-out infinite;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .heart.is-dragging {
+      cursor: grabbing;
+    }
+
+    .letter {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: clamp(13px, 2.4vw, 22px);
+      font-weight: bold;
+      color: #ffd1dc;
+      text-shadow: 0 0 8px #ff174f;
+      animation: glow 1.8s ease-in-out infinite, letter-float 2.4s ease-in-out infinite;
+    }
+
+    .message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff0f4;
+      font-size: clamp(22px, 6vw, 42px);
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      text-shadow: 0 0 15px #ff174f;
+      animation: message-glow 1.8s ease-in-out infinite;
+    }
+
+    .heart.is-paused {
+      animation-play-state: paused;
+    }
+
+    @keyframes spin-heart {
+      from { rotate: 0deg; }
+      to { rotate: 360deg; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { scale: 0.96; }
+      50% { scale: 1.04; }
+    }
+
+    @keyframes glow {
+      0%, 100% { opacity: 0.58; }
+      50% { opacity: 1; color: #fff0f4; }
+    }
+
+    @keyframes letter-float {
+      0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+      50% { transform: translate(-50%, -50%) translateY(-7px); }
+    }
+
+    @keyframes message-glow {
+      0%, 100% { opacity: 0.75; }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+    }
+  </style>
+</head>
+<body>
+  <main class="heart" aria-label="Animasi I love you">
+    <div class="message">I LOVE YOU</div>
+  </main>
+
+  <script>
+    const heart = document.querySelector('.heart');
+    const letters = 'ALBIE'.repeat(16);
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragX = 0;
+    let dragY = 0;
+    let wasDragged = false;
+
+    heart.addEventListener('pointerdown', (event) => {
+      dragStartX = event.clientX - dragX;
+      dragStartY = event.clientY - dragY;
+      wasDragged = false;
+      heart.classList.add('is-dragging');
+      heart.setPointerCapture(event.pointerId);
+    });
+
+    heart.addEventListener('pointermove', (event) => {
+      if (!heart.hasPointerCapture(event.pointerId)) return;
+
+      dragX = event.clientX - dragStartX;
+      dragY = event.clientY - dragStartY;
+      wasDragged = Math.abs(dragX) + Math.abs(dragY) > 4;
+      heart.style.setProperty('--drag-x', `${dragX}px`);
+      heart.style.setProperty('--drag-y', `${dragY}px`);
+    });
+
+    heart.addEventListener('pointerup', (event) => {
+      heart.classList.remove('is-dragging');
+      heart.releasePointerCapture(event.pointerId);
+    });
+
+    heart.addEventListener('click', () => {
+      if (wasDragged) {
+        wasDragged = false;
+        return;
+      }
+      heart.classList.toggle('is-paused');
+    });
+
+    for (let index = 0; index < letters.length; index += 1) {
+      const angle = (Math.PI * 2 * index) / letters.length;
+      const x = 16 * Math.sin(angle) ** 3;
+      const y = 13 * Math.cos(angle) - 5 * Math.cos(2 * angle) -
+        2 * Math.cos(3 * angle) - Math.cos(4 * angle);
+      const letter = document.createElement('span');
+
+      letter.className = 'letter';
+      letter.textContent = letters[index];
+      letter.style.left = `${50 + x * 2.55}%`;
+      letter.style.top = `${50 - y * 2.55}%`;
+      letter.style.animationDelay = `${index * -0.025}s`;
+      heart.appendChild(letter);
+    }
+  </script>
+</body>
+</html>
